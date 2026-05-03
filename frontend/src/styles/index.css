@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-color: #0ea5e9;
+  --secondary-color: #f59e0b;
+  --success-color: #10b981;
+  --danger-color: #ef4444;
+  --warning-color: #f59e0b;
+}
+
+body {
+  @apply font-sans bg-gray-50 text-gray-900;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Banners */
+.banner-simulation {
+  @apply bg-yellow-100 border-l-4 border-yellow-500 p-3 text-yellow-700 text-sm;
+}
+
+/* Forms */
+.input-field {
+  @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500;
+}
+
+.btn-primary {
+  @apply px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition;
+}
+
+.btn-secondary {
+  @apply px-4 py-2 bg-gray-300 text-gray-900 rounded-lg hover:bg-gray-400 transition;
+}
+
+/* Notifications */
+.toast-success {
+  @apply bg-success text-white;
+}
+
+.toast-error {
+  @apply bg-danger text-white;
+}
+
+.toast-warning {
+  @apply bg-warning text-white;
+}
