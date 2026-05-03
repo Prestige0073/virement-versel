@@ -6,7 +6,7 @@ import SimulationBanner from '../components/SimulationBanner';
 
 /**
  * PaymentPage - Page de paiement mobile money
- * Intégration FedaPay, Kkiapay, CinetPay
+ * Intégration FedaPay, Kkiapay, CinetPay, LeekPay ⭐ NEW
  */
 function PaymentPage() {
   const { user } = useAuth();
@@ -14,6 +14,7 @@ function PaymentPage() {
     createPayment, 
     initiateFedapayPayment, 
     initiateKkiapayPayment,
+    initiateLeekpayPayment, // ⭐ NEW
     loading, 
     error, 
     clearError 
@@ -120,6 +121,8 @@ function PaymentPage() {
         await initiateFedapayPayment(transfer);
       } else if (formData.provider === PAYMENT_PROVIDERS.KKIAPAY) {
         await initiateKkiapayPayment(transfer);
+      } else if (formData.provider === PAYMENT_PROVIDERS.LEEKPAY) {
+        await initiateLeekpayPayment(transfer); // ⭐ NEW
       }
     } catch (err) {
       setValidationError(err.message || 'Erreur lors du paiement');
@@ -272,7 +275,7 @@ function PaymentPage() {
                     Fournisseur de Paiement *
                   </label>
                   <div className="grid grid-cols-3 gap-3">
-                    {[PAYMENT_PROVIDERS.FEDAPAY, PAYMENT_PROVIDERS.KKIAPAY].map(provider => (
+                    {[PAYMENT_PROVIDERS.FEDAPAY, PAYMENT_PROVIDERS.KKIAPAY, PAYMENT_PROVIDERS.LEEKPAY].map(provider => (
                       <button
                         key={provider}
                         onClick={() => setFormData(prev => ({ ...prev, provider }))}

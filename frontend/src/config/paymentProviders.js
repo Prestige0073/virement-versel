@@ -6,12 +6,14 @@
  * - FedaPay (Togo, Benin, Cameroun)
  * - Kkiapay (Sénégal, Mali, Burkina Faso)
  * - CinetPay (Côte d'Ivoire, etc.)
+ * - LeekPay (Multi-pays Afrique) ⭐ NEW
  */
 
 export const PAYMENT_PROVIDERS = {
   FEDAPAY: 'fedapay',
   KKIAPAY: 'kkiapay',
   CINETPAY: 'cinetpay',
+  LEEKPAY: 'leekpay',
 };
 
 /**
@@ -53,6 +55,20 @@ export const CINETPAY_CONFIG = {
 };
 
 /**
+ * Configuration LeekPay ⭐ NEW
+ * Documentation: https://leekpay.fr
+ */
+export const LEEKPAY_CONFIG = {
+  publicKey: process.env.REACT_APP_LEEKPAY_PUBLIC_KEY,
+  secretKey: process.env.REACT_APP_LEEKPAY_SECRET_KEY,
+  apiUrl: 'https://leekpay.fr/js/leekpay.js',
+  webhookSecret: process.env.REACT_APP_LEEKPAY_WEBHOOK_SECRET,
+  currencies: ['XOF', 'EUR', 'USD'],
+  minAmount: 100,
+  maxAmount: 10000000,
+};
+
+/**
  * Get active provider config
  */
 export const getProviderConfig = (provider = PAYMENT_PROVIDERS.FEDAPAY) => {
@@ -60,6 +76,7 @@ export const getProviderConfig = (provider = PAYMENT_PROVIDERS.FEDAPAY) => {
     [PAYMENT_PROVIDERS.FEDAPAY]: FEDAPAY_CONFIG,
     [PAYMENT_PROVIDERS.KKIAPAY]: KKIAPAY_CONFIG,
     [PAYMENT_PROVIDERS.CINETPAY]: CINETPAY_CONFIG,
+    [PAYMENT_PROVIDERS.LEEKPAY]: LEEKPAY_CONFIG,
   };
 
   return configs[provider];

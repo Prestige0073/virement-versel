@@ -14,6 +14,24 @@ export const PaymentProvider = ({ children }) => {
   const [currentPayment, setCurrentPayment] = useState(null);
 
   /**
+   * Charger le script LeekPay au démarrage
+   */
+  useEffect(() => {
+    // Charger LeekPay script
+    const script = document.createElement('script');
+    script.src = 'https://leekpay.fr/js/leekpay.js';
+    script.async = true;
+    document.head.appendChild(script);
+
+    return () => {
+      // Cleanup
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+    };
+  }, []);
+
+  /**
    * Initialiser les paiements de l'utilisateur
    */
   useEffect(() => {
@@ -171,6 +189,60 @@ export const PaymentProvider = ({ children }) => {
   }, []);
 
   /**
+   * Initialiser le paiement avec LeekPay ⭐ NEW
+   */
+  const initiateLeekpayPayment = useCallback(async (transfer) => {
+    try {
+      setError(null);
+      setLoading(true);
+
+      // LeekPay utilise un checkout direct via l'API
+      const response = await fetch('/api/payments/leekpay/init', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: transfer.amount,
+          currency: transfer.currency,
+          description: `Virement vers ${transfer.recipient_name}`,
+          transferId: transfer.id,
+          recipientName: transfer.recipient_name,
+          recipientIban: transfer.recipient_iban,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Payment initiation failed');
+
+      const data = await response.json();
+
+      // Utiliser LeekPay checkout
+      if (window.LeekPay) {
+        window.LeekPay.checkout({
+          amount: transfer.amount,
+          currency: transfer.currency,
+          apiKey: process.env.REACT_APP_LEEKPAY_PUBLIC_KEY,
+          successUrl: `${window.location.origin}/payment/success/${data.transactionId}`,
+          cancelUrl: `${window.location.origin}/payment`,
+          metadata: {
+            transferId: transfer.id,
+          },
+        });
+      } else {
+        // Fallback: rediriger vers URL de paiement
+        window.location.href = data.checkoutUrl;
+      }
+
+      return { success: true };
+    } catch (err) {
+      const message = err.message || 'Erreur LeekPay';
+      setError(message);
+      console.error('LeekPay error:', err);
+      return { success: false, error: message };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
    * Mettre à jour le statut du paiement
    */
   const updatePaymentStatus = useCallback(async (transferId, status, details = {}) => {
@@ -272,6 +344,7 @@ export const PaymentProvider = ({ children }) => {
     createPayment,
     initiateFedapayPayment,
     initiateKkiapayPayment,
+    initiateLeekpayPayment, // ⭐ NEW
     updatePaymentStatus,
     cancelPayment,
     getPaymentHistory,
