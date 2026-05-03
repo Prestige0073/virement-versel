@@ -6,10 +6,14 @@ import './styles/index.css'
 import HomePage from './pages/HomePage'
 import SignupPage from './pages/SignupPage'
 import LoginPage from './pages/LoginPage'
+import PasswordRecoveryPage from './pages/PasswordRecoveryPage'
 import DashboardPage from './pages/DashboardPage'
 
 // Components
 import PrivateRoute from './components/PrivateRoute'
+
+// Auth
+import { AuthProvider } from './context/AuthContext'
 
 function App() {
   const [isInitialized, setIsInitialized] = useState(false)
@@ -42,22 +46,25 @@ function App() {
   }
 
   return (
-    <Router>
-      {/* <SimulationBanner /> */}
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route
-          path="/dashboard"
-          element={
-            <PrivateRoute>
-              <DashboardPage />
-            </PrivateRoute>
-          }
-        />
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        {/* <SimulationBanner /> */}
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/password-recovery" element={<PasswordRecoveryPage />} />
+          <Route
+            path="/dashboard"
+            element={
+              <PrivateRoute>
+                <DashboardPage />
+              </PrivateRoute>
+            }
+          />
+        </Routes>
+      </Router>
+    </AuthProvider>
   )
 }
 
