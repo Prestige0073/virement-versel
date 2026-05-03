@@ -6,10 +6,16 @@ import './styles/index.css'
 import HomePage from './pages/HomePage'
 import SignupPage from './pages/SignupPage'
 import LoginPage from './pages/LoginPage'
+import PasswordRecoveryPage from './pages/PasswordRecoveryPage'
+import PaymentPage from './pages/PaymentPage'
 import DashboardPage from './pages/DashboardPage'
 
 // Components
 import PrivateRoute from './components/PrivateRoute'
+
+// Auth & Payment Providers
+import { AuthProvider } from './context/AuthContext'
+import { PaymentProvider } from './context/PaymentContext'
 
 function App() {
   const [isInitialized, setIsInitialized] = useState(false)
@@ -42,22 +48,35 @@ function App() {
   }
 
   return (
-    <Router>
-      {/* <SimulationBanner /> */}
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route
-          path="/dashboard"
-          element={
-            <PrivateRoute>
-              <DashboardPage />
-            </PrivateRoute>
-          }
-        />
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <PaymentProvider>
+        <Router>
+          {/* <SimulationBanner /> */}
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/password-recovery" element={<PasswordRecoveryPage />} />
+            <Route
+              path="/dashboard"
+              element={
+                <PrivateRoute>
+                  <DashboardPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/payment"
+              element={
+                <PrivateRoute>
+                  <PaymentPage />
+                </PrivateRoute>
+              }
+            />
+          </Routes>
+        </Router>
+      </PaymentProvider>
+    </AuthProvider>
   )
 }
 
