@@ -12,6 +12,7 @@ import PaymentPage from './pages/PaymentPage'
 import DashboardPage from './pages/DashboardPage'
 import BankAccountPage from './pages/BankAccountPage'
 import TransferStepPage from './pages/TransferStepPage'
+import TransferAttemptsPage from './pages/TransferAttemptsPage'
 
 // Components
 import PrivateRoute from './components/PrivateRoute'
@@ -21,6 +22,7 @@ import { AuthProvider } from './context/AuthContext'
 import { PaymentProvider } from './context/PaymentContext'
 import { BankAccountProvider } from './context/BankAccountContext'
 import { TransferStepProvider } from './context/TransferStepContext'
+import { TransferAttemptProvider } from './context/TransferAttemptContext'
 
 // Validate environment on app start
 try {
@@ -66,9 +68,10 @@ function App() {
       <PaymentProvider>
         <BankAccountProvider>
           <TransferStepProvider>
-            <Router>
-              {/* <SimulationBanner /> */}
-              <Routes>
+            <TransferAttemptProvider>
+              <Router>
+                {/* <SimulationBanner /> */}
+                <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/signup" element={<SignupPage />} />
                 <Route path="/login" element={<LoginPage />} />
@@ -105,8 +108,17 @@ function App() {
                     </PrivateRoute>
                   }
                 />
+                <Route
+                  path="/transfer-attempts"
+                  element={
+                    <PrivateRoute>
+                      <TransferAttemptsPage />
+                    </PrivateRoute>
+                  }
+                />
               </Routes>
-            </Router>
+              </Router>
+            </TransferAttemptProvider>
           </TransferStepProvider>
         </BankAccountProvider>
       </PaymentProvider>
