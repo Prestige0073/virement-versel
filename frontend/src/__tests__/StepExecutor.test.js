@@ -77,8 +77,8 @@ describe('StepExecutor - Validation Rules', () => {
 
     const rules = StepExecutor.getValidationRules(step);
 
-    expect(rules.holder_name).toBe Truthy();
-    expect(rules.holder_email).toBe Truthy();
+    expect(rules.holder_name).toBeTruthy();
+    expect(rules.holder_email).toBeTruthy();
     expect(rules.holder_name.required).toBe(true);
   });
 
