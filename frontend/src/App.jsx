@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import './styles/index.css'
+import { validateEnvironment, logEnvironmentConfig } from './utils/envConfig'
 
 // Pages
 import HomePage from './pages/HomePage'
@@ -18,6 +19,15 @@ import PrivateRoute from './components/PrivateRoute'
 import { AuthProvider } from './context/AuthContext'
 import { PaymentProvider } from './context/PaymentContext'
 import { BankAccountProvider } from './context/BankAccountContext'
+
+// Validate environment on app start
+try {
+  validateEnvironment();
+  logEnvironmentConfig();
+} catch (envError) {
+  console.error('❌ Environment validation failed:', envError.message);
+  // Setup error display component
+}
 
 function App() {
   const [isInitialized, setIsInitialized] = useState(false)

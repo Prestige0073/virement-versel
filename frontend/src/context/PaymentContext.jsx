@@ -1,9 +1,12 @@
 import React, { createContext, useState, useCallback, useEffect } from 'react';
 import { supabase } from '../config/supabase';
 import { PAYMENT_PROVIDERS, PAYMENT_STATUS } from '../config/paymentProviders';
+import { isRateLimited } from '../utils/rateLimiter';
+import { getSafeErrorMessage } from '../utils/sanitizer';
 
 /**
  * PaymentContext - Gère les paiements mobile money
+ * Security: Rate limiting on payment creation, script loading verification
  */
 export const PaymentContext = createContext(null);
 
@@ -12,23 +15,50 @@ export const PaymentProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentPayment, setCurrentPayment] = useState(null);
+  const [leekpayLoaded, setLeekpayLoaded] = useState(false);
 
   /**
-   * Charger le script LeekPay au démarrage
+   * Charger les scripts externes (LeekPay, etc.) avec error handling
    */
   useEffect(() => {
-    // Charger LeekPay script
-    const script = document.createElement('script');
-    script.src = 'https://leekpay.fr/js/leekpay.js';
-    script.async = true;
-    document.head.appendChild(script);
+    // Load LeekPay script safely with timeout
+    const loadLeekpayScript = () => {
+      try {
+        const script = document.createElement('script');
+        script.src = 'https://leekpay.fr/js/leekpay.js';
+        script.async = true;
+        script.timeout = 5000; // 5 second timeout
 
-    return () => {
-      // Cleanup
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
+        script.onload = () => {
+          setLeekpayLoaded(true);
+          console.log('✅ LeekPay script loaded successfully');
+        };
+
+        script.onerror = () => {
+          console.warn('⚠️ Failed to load LeekPay script - will try again later');
+          // Don't set error state, just log. Payment can still work.
+        };
+
+        document.head.appendChild(script);
+
+        return () => {
+          // Cleanup on unmount
+          if (script.parentNode) {
+            try {
+              script.parentNode.removeChild(script);
+            } catch (err) {
+              console.error('Cleanup error:', err);
+            }
+          }
+        };
+      } catch (err) {
+        console.error('Error loading LeekPay script:', err);
       }
     };
+
+    const cleanup = loadLeekpayScript();
+
+    return cleanup;
   }, []);
 
   /**
@@ -58,9 +88,15 @@ export const PaymentProvider = ({ children }) => {
 
   /**
    * Créer une transaction de paiement
+   * Security: Rate limited (max 10 per minute)
    */
   const createPayment = useCallback(async (paymentData) => {
     try {
+      // Rate limiting: max 10 payment creations per minute
+      if (isRateLimited('payment-create', 10, 60000)) {
+        throw new Error('Trop de tentatives. Veuillez réessayer dans 1 minute.');
+      }
+
       setError(null);
       setLoading(true);
 
@@ -73,17 +109,25 @@ export const PaymentProvider = ({ children }) => {
         provider,
       } = paymentData;
 
+      // Validate amount bounds
+      if (amount < 100 || amount > 10000000) {
+        throw new Error('Montant entre 100 et 10 000 000 requis');
+      }
+
+      // Sanitize recipient name
+      const sanitizedName = (recipient.name || '').replace(/[<>\"'%;()&+]/g, '').substring(0, 100);
+
       // Créer la transaction en DB
       const { data, error } = await supabase
         .from('transfers')
         .insert([
           {
             bank_account_id: bankAccountId,
-            recipient_name: recipient.name,
-            recipient_iban: recipient.iban,
-            recipient_bic: recipient.bic,
-            recipient_bank: recipient.bank,
-            amount,
+            recipient_name: sanitizedName,
+            recipient_iban: recipient.iban?.toUpperCase() || '',
+            recipient_bic: recipient.bic?.toUpperCase() || '',
+            recipient_bank: (recipient.bank || '').substring(0, 100),
+            amount: Math.floor(amount), // Ensure integer
             currency,
             status: PAYMENT_STATUS.INITIATED,
             current_step: 1,

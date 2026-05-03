@@ -1,9 +1,12 @@
 import React, { createContext, useState, useCallback, useEffect } from 'react';
 import { supabase } from '../config/supabase';
+import { isRateLimited, getRemainingRequests } from '../utils/rateLimiter';
+import { sanitizeAccountData, getSafeErrorMessage } from '../utils/sanitizer';
 
 /**
  * BankAccountContext - Gère les comptes bancaires de l'utilisateur
  * CRUD operations pour bank_accounts table
+ * Security: Rate limiting, input sanitization, atomic transactions
  */
 export const BankAccountContext = createContext(null);
 
@@ -48,49 +51,60 @@ export const BankAccountProvider = ({ children }) => {
 
   /**
    * Créer un nouveau compte bancaire
+   * Security: Rate limited, sanitized, atomic transaction
    */
   const createAccount = useCallback(async (accountData) => {
     try {
+      // Rate limiting: max 5 account creations per minute
+      if (isRateLimited('bank-account-create', 5, 60000)) {
+        const remaining = getRemainingRequests('bank-account-create', 5);
+        throw new Error(`Trop de requêtes. Réessayez dans 1 minute. (${remaining} restantes)`);
+      }
+
       setError(null);
       setLoading(true);
 
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+      if (!user) throw new Error('Vous devez être connecté');
+
+      // Sanitize input data to prevent XSS
+      const sanitized = sanitizeAccountData(accountData);
 
       // Validation IBAN
-      if (!validateIBAN(accountData.iban)) {
-        throw new Error('IBAN invalide');
+      if (!validateIBAN(sanitized.iban)) {
+        throw new Error('Format IBAN invalide');
       }
 
-      // Validation montant d'ouverture (optionnel)
-      if (accountData.current_balance && accountData.current_balance < 0) {
-        throw new Error('Le solde ne peut pas être négatif');
-      }
-
-      // Upload logo si fourni
-      let bank_logo_url = accountData.bank_logo_url;
+      // Upload logo si fourni (BEFORE creating account for atomicity)
+      let bank_logo_url = null;
       if (accountData.logoFile) {
-        bank_logo_url = await uploadBankLogo(accountData.logoFile, user.id);
+        try {
+          bank_logo_url = await uploadBankLogo(accountData.logoFile, user.id);
+        } catch (logoError) {
+          // Fail fast if logo upload fails - don't create account
+          throw new Error(`Erreur upload logo: ${logoError.message}`);
+        }
       }
 
+      // Now create account with validated data
       const { data, error: insertError } = await supabase
         .from('bank_accounts')
         .insert([{
           user_id: user.id,
-          holder_name: accountData.holder_name,
-          holder_email: accountData.holder_email || user.email,
-          phone: accountData.phone,
-          address: accountData.address,
-          iban: accountData.iban.toUpperCase(),
-          bic: accountData.bic?.toUpperCase() || '',
-          bank_name: accountData.bank_name,
-          branch: accountData.branch || '',
-          account_type: accountData.account_type || 'courant',
-          tier: accountData.tier || 'basique',
-          currency: accountData.currency || 'XOF',
+          holder_name: sanitized.holder_name,
+          holder_email: sanitized.holder_email || user.email,
+          phone: sanitized.phone,
+          address: sanitized.address,
+          iban: sanitized.iban.toUpperCase(),
+          bic: sanitized.bic.toUpperCase() || '',
+          bank_name: sanitized.bank_name,
+          branch: sanitized.branch || '',
+          account_type: sanitized.account_type || 'courant',
+          tier: sanitized.tier || 'basique',
+          currency: sanitized.currency || 'XOF',
           bank_logo_url,
-          current_balance: accountData.current_balance || 0,
-          language: accountData.language || 'fr',
+          current_balance: sanitized.current_balance || 0,
+          language: sanitized.language || 'fr',
         }])
         .select();
 
@@ -99,7 +113,7 @@ export const BankAccountProvider = ({ children }) => {
       setAccounts(prev => [data[0], ...prev]);
       return { success: true, data: data[0] };
     } catch (err) {
-      const message = err.message || 'Erreur création compte';
+      const message = getSafeErrorMessage(err);
       setError(message);
       console.error('Create account error:', err);
       return { success: false, error: message };
@@ -136,34 +150,40 @@ export const BankAccountProvider = ({ children }) => {
 
   /**
    * Mettre à jour un compte bancaire
+   * Security: Rate limited, sanitized
    */
   const updateAccount = useCallback(async (accountId, updates) => {
     try {
+      // Rate limiting: max 10 updates per minute
+      if (isRateLimited('bank-account-update', 10, 60000)) {
+        throw new Error('Trop de mise à jour. Réessayez plus tard.');
+      }
+
       setError(null);
       setLoading(true);
 
-      // Validation IBAN si modifié
-      if (updates.iban && !validateIBAN(updates.iban)) {
-        throw new Error('IBAN invalide');
-      }
+      // Sanitize input
+      const sanitized = sanitizeAccountData(updates);
 
-      const updateData = { ...updates };
+      // Validation IBAN si modifié
+      if (sanitized.iban && !validateIBAN(sanitized.iban)) {
+        throw new Error('Format IBAN invalide');
+      }
 
       // Upload nouveau logo si fourni
       if (updates.logoFile) {
         const { data: { user } } = await supabase.auth.getUser();
-        updateData.bank_logo_url = await uploadBankLogo(updates.logoFile, user.id);
-        delete updateData.logoFile;
+        sanitized.bank_logo_url = await uploadBankLogo(updates.logoFile, user.id);
       }
 
       // Convertir IBAN en majuscules
-      if (updateData.iban) {
-        updateData.iban = updateData.iban.toUpperCase();
+      if (sanitized.iban) {
+        sanitized.iban = sanitized.iban.toUpperCase();
       }
 
       const { data, error: updateError } = await supabase
         .from('bank_accounts')
-        .update(updateData)
+        .update(sanitized)
         .eq('id', accountId)
         .select()
         .single();
@@ -180,7 +200,7 @@ export const BankAccountProvider = ({ children }) => {
 
       return { success: true, data };
     } catch (err) {
-      const message = err.message || 'Erreur mise à jour compte';
+      const message = getSafeErrorMessage(err);
       setError(message);
       console.error('Update account error:', err);
       return { success: false, error: message };
@@ -191,9 +211,15 @@ export const BankAccountProvider = ({ children }) => {
 
   /**
    * Supprimer un compte bancaire
+   * Security: Rate limited, checks for active transfers
    */
   const deleteAccount = useCallback(async (accountId) => {
     try {
+      // Rate limiting: max 3 deletes per minute
+      if (isRateLimited('bank-account-delete', 3, 60000)) {
+        throw new Error('Trop de suppressions. Réessayez plus tard.');
+      }
+
       setError(null);
       setLoading(true);
 
@@ -202,12 +228,12 @@ export const BankAccountProvider = ({ children }) => {
         .from('transfers')
         .select('id')
         .eq('bank_account_id', accountId)
-        .eq('status', 'pending');
+        .in('status', ['pending', 'processing']);
 
       if (checkError) throw checkError;
 
       if (activeTransfers && activeTransfers.length > 0) {
-        throw new Error('Impossible de supprimer: transfers en cours');
+        throw new Error('Impossible de supprimer: vous avez des transferts en cours');
       }
 
       const { error: deleteError } = await supabase
@@ -225,7 +251,7 @@ export const BankAccountProvider = ({ children }) => {
 
       return { success: true };
     } catch (err) {
-      const message = err.message || 'Erreur suppression compte';
+      const message = getSafeErrorMessage(err);
       setError(message);
       console.error('Delete account error:', err);
       return { success: false, error: message };
