@@ -11,6 +11,7 @@ import PasswordRecoveryPage from './pages/PasswordRecoveryPage'
 import PaymentPage from './pages/PaymentPage'
 import DashboardPage from './pages/DashboardPage'
 import BankAccountPage from './pages/BankAccountPage'
+import TransferStepPage from './pages/TransferStepPage'
 
 // Components
 import PrivateRoute from './components/PrivateRoute'
@@ -19,6 +20,7 @@ import PrivateRoute from './components/PrivateRoute'
 import { AuthProvider } from './context/AuthContext'
 import { PaymentProvider } from './context/PaymentContext'
 import { BankAccountProvider } from './context/BankAccountContext'
+import { TransferStepProvider } from './context/TransferStepContext'
 
 // Validate environment on app start
 try {
@@ -63,39 +65,49 @@ function App() {
     <AuthProvider>
       <PaymentProvider>
         <BankAccountProvider>
-          <Router>
-            {/* <SimulationBanner /> */}
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/signup" element={<SignupPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/password-recovery" element={<PasswordRecoveryPage />} />
-              <Route
-                path="/dashboard"
-                element={
-                  <PrivateRoute>
-                    <DashboardPage />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/payment"
-                element={
-                  <PrivateRoute>
-                    <PaymentPage />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/bank-accounts"
-                element={
-                  <PrivateRoute>
-                    <BankAccountPage />
-                  </PrivateRoute>
-                }
-              />
-            </Routes>
-          </Router>
+          <TransferStepProvider>
+            <Router>
+              {/* <SimulationBanner /> */}
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/signup" element={<SignupPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/password-recovery" element={<PasswordRecoveryPage />} />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <PrivateRoute>
+                      <DashboardPage />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/payment"
+                  element={
+                    <PrivateRoute>
+                      <PaymentPage />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/bank-accounts"
+                  element={
+                    <PrivateRoute>
+                      <BankAccountPage />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/transfer-steps"
+                  element={
+                    <PrivateRoute>
+                      <TransferStepPage />
+                    </PrivateRoute>
+                  }
+                />
+              </Routes>
+            </Router>
+          </TransferStepProvider>
         </BankAccountProvider>
       </PaymentProvider>
     </AuthProvider>
