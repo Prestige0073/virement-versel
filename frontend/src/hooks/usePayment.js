@@ -2,10 +2,10 @@ import { useContext } from 'react';
 import { PaymentContext } from '../context/PaymentContext';
 
 /**
- * usePayment - Hook pour accéder au contexte de paiement
+ * usePayment - Hook pour accéder au contexte de paiement (LeekPay)
  * 
  * Utilisation:
- * const { createPayment, initiateFedapayPayment, payments } = usePayment();
+ * const { createPayment, initiateLeekpayPayment, payments } = usePayment();
  * 
  * @returns {Object} - Payment context avec toutes les méthodes
  * @throws {Error} - Si utilisé en dehors d'PaymentProvider

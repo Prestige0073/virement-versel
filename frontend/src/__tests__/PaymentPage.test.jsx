@@ -26,8 +26,6 @@ vi.mock('../hooks/useAuth', () => ({
 vi.mock('../hooks/usePayment', () => ({
   usePayment: () => ({
     createPayment: vi.fn().mockResolvedValue({ success: true, id: 'payment-123' }),
-    initiateFedapayPayment: vi.fn().mockResolvedValue({ success: true }),
-    initiateKkiapayPayment: vi.fn().mockResolvedValue({ success: true }),
     initiateLeekpayPayment: vi.fn().mockResolvedValue({ success: true }),
     loading: false,
     error: null,

@@ -156,84 +156,15 @@ export const PaymentProvider = ({ children }) => {
   /**
    * Initialiser le paiement avec FedaPay
    */
-  const initiateFedapayPayment = useCallback(async (transfer) => {
-    try {
-      setError(null);
-      setLoading(true);
-
-      const response = await fetch('/api/payments/fedapay/init', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: transfer.amount,
-          currency: transfer.currency,
-          description: `Virement vers ${transfer.recipient_name}`,
-          transferId: transfer.id,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Payment initiation failed');
-
-      const data = await response.json();
-
-      // Rediriger vers FedaPay
-      window.location.href = data.redirectUrl;
-
-      return { success: true };
-    } catch (err) {
-      const message = err.message || 'Erreur FedaPay';
-      setError(message);
-      console.error('FedaPay error:', err);
-      return { success: false, error: message };
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Note: FedaPay support removed - using LeekPay only
 
   /**
    * Initialiser le paiement avec Kkiapay
    */
-  const initiateKkiapayPayment = useCallback(async (transfer) => {
-    try {
-      setError(null);
-      setLoading(true);
-
-      const response = await fetch('/api/payments/kkiapay/init', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: transfer.amount,
-          currency: transfer.currency,
-          phone: transfer.phone,
-          description: `Virement vers ${transfer.recipient_name}`,
-          transferId: transfer.id,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Payment initiation failed');
-
-      const data = await response.json();
-
-      // Ouvrir widget de paiement Kkiapay
-      if (window.Kkiapay) {
-        window.Kkiapay.openPaymentWidget(data.transactionId);
-      } else {
-        throw new Error('Kkiapay widget not loaded');
-      }
-
-      return { success: true };
-    } catch (err) {
-      const message = err.message || 'Erreur Kkiapay';
-      setError(message);
-      console.error('Kkiapay error:', err);
-      return { success: false, error: message };
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Note: Kkiapay support removed - using LeekPay only
 
   /**
-   * Initialiser le paiement avec LeekPay ⭐ NEW
+   * Initialiser le paiement avec LeekPay
    */
   const initiateLeekpayPayment = useCallback(async (transfer) => {
     try {
@@ -386,9 +317,7 @@ export const PaymentProvider = ({ children }) => {
 
     // Méthodes
     createPayment,
-    initiateFedapayPayment,
-    initiateKkiapayPayment,
-    initiateLeekpayPayment, // ⭐ NEW
+    initiateLeekpayPayment,
     updatePaymentStatus,
     cancelPayment,
     getPaymentHistory,

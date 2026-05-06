@@ -2,60 +2,16 @@
  * Config - PaymentProviders.js
  * Configuration des fournisseurs de paiement mobile money
  * 
- * Providers supportés:
- * - FedaPay (Togo, Benin, Cameroun)
- * - Kkiapay (Sénégal, Mali, Burkina Faso)
- * - CinetPay (Côte d'Ivoire, etc.)
- * - LeekPay (Multi-pays Afrique) ⭐ NEW
+ * Provider utilisé:
+ * - LeekPay (Multi-pays Afrique)
  */
 
 export const PAYMENT_PROVIDERS = {
-  FEDAPAY: 'fedapay',
-  KKIAPAY: 'kkiapay',
-  CINETPAY: 'cinetpay',
   LEEKPAY: 'leekpay',
 };
 
 /**
- * Configuration FedaPay
- */
-export const FEDAPAY_CONFIG = {
-  publicKey: process.env.REACT_APP_FEDAPAY_PUBLIC_KEY,
-  apiUrl: 'https://api.fedapay.com',
-  webhookSecret: process.env.REACT_APP_FEDAPAY_WEBHOOK_SECRET,
-  currencies: ['XOF', 'EUR', 'USD'], // CFA, Euro, Dollar
-  minAmount: 100,
-  maxAmount: 5000000,
-};
-
-/**
- * Configuration Kkiapay
- */
-export const KKIAPAY_CONFIG = {
-  apiKey: process.env.REACT_APP_KKIAPAY_API_KEY,
-  secretKey: process.env.REACT_APP_KKIAPAY_SECRET_KEY,
-  apiUrl: 'https://api.kkiapay.com',
-  webhookSecret: process.env.REACT_APP_KKIAPAY_WEBHOOK_SECRET,
-  currencies: ['XOF', 'EUR'],
-  minAmount: 100,
-  maxAmount: 5000000,
-};
-
-/**
- * Configuration CinetPay
- */
-export const CINETPAY_CONFIG = {
-  apiKey: process.env.REACT_APP_CINETPAY_API_KEY,
-  siteId: process.env.REACT_APP_CINETPAY_SITE_ID,
-  apiUrl: 'https://api.cinetpay.com',
-  webhookSecret: process.env.REACT_APP_CINETPAY_WEBHOOK_SECRET,
-  currencies: ['XOF', 'EUR', 'USD'],
-  minAmount: 50,
-  maxAmount: 10000000,
-};
-
-/**
- * Configuration LeekPay ⭐ NEW
+ * Configuration LeekPay
  * Documentation: https://leekpay.fr
  */
 export const LEEKPAY_CONFIG = {
@@ -71,11 +27,8 @@ export const LEEKPAY_CONFIG = {
 /**
  * Get active provider config
  */
-export const getProviderConfig = (provider = PAYMENT_PROVIDERS.FEDAPAY) => {
+export const getProviderConfig = (provider = PAYMENT_PROVIDERS.LEEKPAY) => {
   const configs = {
-    [PAYMENT_PROVIDERS.FEDAPAY]: FEDAPAY_CONFIG,
-    [PAYMENT_PROVIDERS.KKIAPAY]: KKIAPAY_CONFIG,
-    [PAYMENT_PROVIDERS.CINETPAY]: CINETPAY_CONFIG,
     [PAYMENT_PROVIDERS.LEEKPAY]: LEEKPAY_CONFIG,
   };
 

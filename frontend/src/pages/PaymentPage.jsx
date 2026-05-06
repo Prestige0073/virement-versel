@@ -6,15 +6,13 @@ import SimulationBanner from '../components/SimulationBanner';
 
 /**
  * PaymentPage - Page de paiement mobile money
- * Intégration FedaPay, Kkiapay, CinetPay, LeekPay ⭐ NEW
+ * Intégration LeekPay
  */
 function PaymentPage() {
   const { user } = useAuth();
   const { 
     createPayment, 
-    initiateFedapayPayment, 
-    initiateKkiapayPayment,
-    initiateLeekpayPayment, // ⭐ NEW
+    initiateLeekpayPayment,
     loading, 
     error, 
     clearError 
@@ -31,7 +29,7 @@ function PaymentPage() {
     },
     phone: '',
     operator: MOBILE_OPERATORS.ORANGE,
-    provider: PAYMENT_PROVIDERS.FEDAPAY,
+    provider: PAYMENT_PROVIDERS.LEEKPAY,
     description: '',
   });
 
@@ -116,14 +114,8 @@ function PaymentPage() {
       const transfer = paymentResult.transfer;
       setStep(3);
 
-      // Initialiser le paiement avec le provider choisi
-      if (formData.provider === PAYMENT_PROVIDERS.FEDAPAY) {
-        await initiateFedapayPayment(transfer);
-      } else if (formData.provider === PAYMENT_PROVIDERS.KKIAPAY) {
-        await initiateKkiapayPayment(transfer);
-      } else if (formData.provider === PAYMENT_PROVIDERS.LEEKPAY) {
-        await initiateLeekpayPayment(transfer); // ⭐ NEW
-      }
+      // Initialiser le paiement avec LeekPay
+      await initiateLeekpayPayment(transfer);
     } catch (err) {
       setValidationError(err.message || 'Erreur lors du paiement');
     }
@@ -269,26 +261,14 @@ function PaymentPage() {
                   />
                 </div>
 
-                {/* Provider Selection */}
+                {/* Provider Info */}
                 <div>
                   <label className="block text-gray-700 font-semibold mb-2">
-                    Fournisseur de Paiement *
+                    Fournisseur de Paiement
                   </label>
-                  <div className="grid grid-cols-3 gap-3">
-                    {[PAYMENT_PROVIDERS.FEDAPAY, PAYMENT_PROVIDERS.KKIAPAY, PAYMENT_PROVIDERS.LEEKPAY].map(provider => (
-                      <button
-                        key={provider}
-                        onClick={() => setFormData(prev => ({ ...prev, provider }))}
-                        className={`p-3 rounded-lg border-2 transition-all font-semibold uppercase text-sm ${
-                          formData.provider === provider
-                            ? 'border-primary-600 bg-primary-50 text-primary-900'
-                            : 'border-gray-300 bg-white text-gray-700 hover:border-primary-600'
-                        }`}
-                        disabled={loading}
-                      >
-                        {provider}
-                      </button>
-                    ))}
+                  <div className="p-4 bg-gradient-to-r from-primary-50 to-primary-100 border-2 border-primary-300 rounded-lg">
+                    <p className="text-primary-900 font-semibold">🚀 LeekPay</p>
+                    <p className="text-primary-700 text-sm mt-1">Paiement sécurisé par LeekPay</p>
                   </div>
                 </div>
 
