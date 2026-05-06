@@ -1,0 +1,22 @@
+{
+  "buildCommand": "npm install && cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/dist",
+  "framework": "vite",
+  "env": {
+    "VITE_SUPABASE_URL": "@supabase_url",
+    "VITE_SUPABASE_ANON_KEY": "@supabase_anon_key",
+    "VITE_API_URL": "@api_url",
+    "VITE_LEEKPAY_PUBLIC_KEY": "@leekpay_public_key",
+    "VITE_LEEKPAY_SECRET_KEY": "@leekpay_secret_key",
+    "VITE_LEEKPAY_WEBHOOK_SECRET": "@leekpay_webhook_secret",
+    "VITE_APP_NAME": "Simulateur de Virement Bancaire",
+    "VITE_APP_ENV": "production"
+  },
+  "regions": ["fra"],
+  "functions": {
+    "api/**/*.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  }
+}
