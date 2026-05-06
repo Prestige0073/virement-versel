@@ -2,6 +2,7 @@
   "buildCommand": "npm install && cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
   "framework": "vite",
+  "deploymentId": "2026-05-06-trigger-v1",
   "env": {
     "VITE_SUPABASE_URL": "@supabase_url",
     "VITE_SUPABASE_ANON_KEY": "@supabase_anon_key",
